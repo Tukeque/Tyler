@@ -40,6 +40,9 @@ class Tyler:
     @final
     def get_tile(self, x: int, y: int) -> Sprite:
         try:
+            if x < 0 or x > self.tile_w or y < 0 or y > self.tile_w:
+                raise IndexError
+
             return self.tiles[self.xy_to_int(x, y)]
         except IndexError:
             return self.OUTSIDE
