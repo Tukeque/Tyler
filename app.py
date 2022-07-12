@@ -34,7 +34,15 @@ class Tyler:
 
     @final
     def xy_to_int(self, x: int, y: int) -> int:
-        return y*self.tile_h, x
+        return y * self.tile_h + x
+
+    @final
+    def get_tile(self, x: int, y: int) -> Sprite:
+        return self.tiles[self.xy_to_int(x, y)]
+
+    @final
+    def set_tile(self, x: int, y: int, sprite: Sprite) -> None:
+        self.tiles[self.xy_to_int(x, y)] = sprite
 
     @final
     def add_texture(self, texture_name) -> int:
