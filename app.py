@@ -58,6 +58,10 @@ class Tyler:
         self.tiles[self.xy_to_int(x, y)] = sprite
 
     @final
+    def gen_tiles(self, texture_index: int) -> None:
+        self.tiles = [Sprite(texture_index, self.int_to_xy(x)[0], self.int_to_xy(x)[1], -1, self) for x in range(self.tile_w * self.tile_h)]
+
+    @final
     def texture(self, texture_name: str) -> int:
         return self.TEXTURE_NAMES.index(texture_name)
 
@@ -82,7 +86,7 @@ class Tyler:
         self.surfaces = [pygame.image.fromstring(texture.tobytes(), texture.size, texture.mode).convert() for texture in self.textures]
         self.old_tiles = [] # don't touch
 
-        self.tiles = [Sprite(self.texture(self.DEFAULT_TEXTURE_NAME), self.int_to_xy(x)[0], self.int_to_xy(x)[1], -1, self) for x in range(tile_w * tile_h)]
+        self.gen_tiles(self.texture(self.DEFAULT_TEXTURE_NAME))
         self.OUTSIDE = Sprite(self.texture(self.OUTSIDE_TEXTURE_NAME), -1, -1, -9999, self)
 
         pygame.display.set_caption(self.NAME)
