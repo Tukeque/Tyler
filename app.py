@@ -1,7 +1,7 @@
 from copy import copy
 from typing import final
 from PIL import Image
-import pygame
+import pygame, traceback
 
 class Sprite:
     def __init__(self, texture_index: int, x: int, y: int, z: int, tyler):
@@ -148,7 +148,8 @@ class Tyler:
             while self.do_run:
                 self.update()
         except Exception as e:
-            print(e)
+            print(traceback.format_exc())
         
         self.quit()
         pygame.quit()
+        print("Goodbye!")
