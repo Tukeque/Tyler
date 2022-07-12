@@ -18,6 +18,22 @@ class Sprite:
             self.tyler.height - (self.y + 1) * self.tyler.texture_height
         ))
 
+class Scene:
+    def loop(self, delta) -> None:
+        pass
+
+    def start(self) -> None:
+        pass
+
+    def quit(self) -> None:
+        pass
+
+    def event(self, event) -> None:
+        pass
+
+    def draw(self) -> None:
+        pass
+
 class Tyler:
     WHITE = (255, 255, 255)
     BLACK = (0, 0, 0)
@@ -30,6 +46,7 @@ class Tyler:
     OUTSIDE = None
     DEFAULT_TEXTURE_NAME = "default.png"
     OUTSIDE_TEXTURE_NAME = "default.png"
+    DEFAULT_SCENE_NAME = "main"
 
     TEXTURE_NAMES = [
         "default.png"
@@ -66,7 +83,13 @@ class Tyler:
         return self.TEXTURE_NAMES.index(texture_name)
 
     @final
-    def __init__(self, width: int, height: int, tile_w: int, tile_h: int):
+    def load_scene(self, name: str) -> None:
+        self.scene = self.scenes[name]
+
+        self.scene.start()
+
+    @final
+    def __init__(self, width: int, height: int, tile_w: int, tile_h: int, scenes: dict[str, Scene]):
         pygame.init()
         self.screen = pygame.display.set_mode((width, height))
 
@@ -92,22 +115,10 @@ class Tyler:
         pygame.display.set_caption(self.NAME)
         self.clock = pygame.time.Clock() # For syncing the FPS
 
-        self.start()
-
-    def loop(self, delta) -> None:
-        pass
-
-    def start(self) -> None:
-        pass
-
-    def quit(self) -> None:
-        pass
-
-    def event(self, event) -> None:
-        pass
-
-    def draw(self) -> None:
-        pass
+        self.scenes = scenes
+        for scene_name in self.scenes:
+            self.scenes[scene_name].tyler = self
+        self.load_scene(self.DEFAULT_SCENE_NAME)
 
     @final
     def update(self) -> None:
@@ -121,10 +132,10 @@ class Tyler:
             if event.type == pygame.QUIT:
                 self.do_run = False
 
-            self.event(event)
+            self.scene.event(event)
 
         self.screen.fill(self.BLACK)
-        self.loop(delta)
+        self.scene.loop(delta)
 
         def get_sort_value(sprite: Sprite) -> int:
                 return sprite.z
@@ -145,7 +156,7 @@ class Tyler:
 
         self.old_tiles = [copy(x) for x in self.tiles]
 
-        self.draw()
+        self.scene.draw()
         pygame.display.flip()
 
     @final
@@ -156,6 +167,6 @@ class Tyler:
         except Exception as e:
             print(traceback.format_exc())
         
-        self.quit()
+        self.scene.quit()
         pygame.quit()
         print("Goodbye!")
