@@ -2,7 +2,7 @@
 2d game engine written in python with pygame that emulates NES-style graphics, with only sprites and tiles being rendered, but with potential to render more if needed
 
 ## Usage
-`dummy.py` shows a basic implementation of Tyler that renders a sprite with a background
+`dummy.py` shows a basic implementation of Tyler that renders a sprite that moves with a background
 
 the only two built-in methods of rendering stuff is by tiles or sprites
 
