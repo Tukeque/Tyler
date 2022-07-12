@@ -28,6 +28,8 @@ class Tyler:
     FPS = 30
     NAME = "Tyler Application"
     OUTSIDE = None
+    DEFAULT_TEXTURE_NAME = "default.png"
+    OUTSIDE_TEXTURE_NAME = "default.png"
 
     @final
     def int_to_xy(self, x: int) -> tuple[int, int]:
@@ -78,10 +80,12 @@ class Tyler:
         self.sprites: dict[str, Sprite] = {}
         self.textures = []
         self.surfaces = []
-        default_index = self.add_texture("default.png")
-        self.tiles = [Sprite(default_index, self.int_to_xy(x)[0], self.int_to_xy(x)[1], -1, self) for x in range(tile_w * tile_h)]
         self.old_tiles = [] # don't touch
-        self.OUTSIDE = Sprite("default.png", -1, -1, -9999, self)
+
+        default_index = self.add_texture(self.DEFAULT_TEXTURE_NAME)
+        self.tiles = [Sprite(default_index, self.int_to_xy(x)[0], self.int_to_xy(x)[1], -1, self) for x in range(tile_w * tile_h)]
+        outside_index = self.add_texture(self.OUTSIDE_TEXTURE_NAME)
+        self.OUTSIDE = Sprite(outside_index, -1, -1, -9999, self)
 
         pygame.display.set_caption(self.NAME)
         self.clock = pygame.time.Clock() # For syncing the FPS
