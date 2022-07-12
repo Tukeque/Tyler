@@ -28,8 +28,12 @@ class Tyler:
     FPS = 30
     NAME = "Tyler Application"
     OUTSIDE = None
-    DEFAULT_TEXTURE_NAME = "default.png"
-    OUTSIDE_TEXTURE_NAME = "default.png"
+    DEFAULT_TEXTURE_INDEX = 0
+    OUTSIDE_TEXTURE_INDEX = 0
+
+    TEXTURE_NAMES = [
+        "default.png"
+    ]
 
     @final
     def int_to_xy(self, x: int) -> tuple[int, int]:
@@ -54,12 +58,8 @@ class Tyler:
         self.tiles[self.xy_to_int(x, y)] = sprite
 
     @final
-    def add_texture(self, texture_name) -> int:
-        texture = Image.open(texture_name).resize((self.texture_width, self.texture_height))
-
-        self.textures.append(texture)
-        self.surfaces.append(pygame.image.fromstring(texture.tobytes(), texture.size, texture.mode).convert())
-        return len(self.textures) - 1
+    def texture(self, texture_name: str) -> int:
+        return self.TEXTURE_NAMES.index(texture_name)
 
     @final
     def __init__(self, width: int, height: int, tile_w: int, tile_h: int):
@@ -78,14 +78,12 @@ class Tyler:
 
         self.tiles_draw = []
         self.sprites: dict[str, Sprite] = {}
-        self.textures = []
-        self.surfaces = []
+        self.textures = [Image.open(name).resize((self.texture_width, self.texture_height)) for name in self.TEXTURE_NAMES]
+        self.surfaces = [pygame.image.fromstring(texture.tobytes(), texture.size, texture.mode).convert() for texture in self.textures]
         self.old_tiles = [] # don't touch
 
-        default_index = self.add_texture(self.DEFAULT_TEXTURE_NAME)
-        self.tiles = [Sprite(default_index, self.int_to_xy(x)[0], self.int_to_xy(x)[1], -1, self) for x in range(tile_w * tile_h)]
-        outside_index = self.add_texture(self.OUTSIDE_TEXTURE_NAME)
-        self.OUTSIDE = Sprite(outside_index, -1, -1, -9999, self)
+        self.tiles = [Sprite(0, self.int_to_xy(x)[0], self.int_to_xy(x)[1], -1, self) for x in range(tile_w * tile_h)]
+        self.OUTSIDE = Sprite(0, -1, -1, -9999, self)
 
         pygame.display.set_caption(self.NAME)
         self.clock = pygame.time.Clock() # For syncing the FPS
