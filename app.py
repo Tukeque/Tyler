@@ -42,9 +42,9 @@ class Tyler:
     TRANSPARENT_TEXTURE_NAME = "transparent.png"
     DEFAULT_SCENE_NAME = "main"
 
-    TEXTURE_NAMES = [
-        "default.png",
-        "transparent.png"
+    TEXTURE_DATA = [
+        ("default.png", 1, 1),
+        ("transparent.png", 1, 1)
     ]
 
     @final
@@ -88,7 +88,10 @@ class Tyler:
 
     @final
     def texture(self, texture_name: str) -> int:
-        return self.TEXTURE_NAMES.index(texture_name)
+        for i, texture in enumerate(self.TEXTURE_DATA):
+            if texture[0] == texture_name:
+                return i
+        raise Exception(f"Cannot find texture {texture_name}")
 
     @final
     def load_scene(self, name: str) -> None:
@@ -113,7 +116,7 @@ class Tyler:
         self.fps_check = 5
 
         self.sprites: dict[str, Sprite] = {}
-        self.textures = [pygame.transform.scale(pygame.image.load(name), (self.texture_width, self.texture_height)) for name in self.TEXTURE_NAMES]
+        self.textures = [pygame.transform.scale(pygame.image.load(texture[0]), (self.texture_width * texture[1], self.texture_height * texture[2])) for texture in self.TEXTURE_DATA]
 
         self.background: list[Sprite] = [None for _ in range(self.length)]
         self.foreground: list[Sprite] = [None for _ in range(self.length)]
