@@ -11,7 +11,7 @@ class Sprite:
         self.tyler = tyler
         self.texture_index = texture_index
 
-    def draw(self, screen) -> None:
+    def draw(self, screen: pygame.Surface) -> None:
         surface = self.tyler.surfaces[self.texture_index]
         screen.blit(surface, (
             self.x * self.tyler.texture_width,
