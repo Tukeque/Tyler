@@ -139,7 +139,11 @@ class Tyler:
 
     @final
     def update(self) -> None:
-        delta = self.clock.tick(self.FPS) / 1000 # will make the loop run at the same speed all the time
+        if self.FPS != 0:
+            delta = self.clock.tick(self.FPS) / 1000 # will make the loop run at the same speed all the time
+        else:
+            delta = self.clock.tick() / 1000 # no FPS limit
+
         self.fps_check += 1 * delta
         if self.fps_check >= 2:
             print(f"FPS: {round(1/delta, 1)}")
