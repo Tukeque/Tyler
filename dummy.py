@@ -4,13 +4,13 @@ from app import Tyler, Scene, Sprite
 class Dummy(Tyler):
     NAME = "Dummy"
     DEFAULT_SCENE_NAME = "title_screen"
-    TEXTURE_NAMES = [
-        "default.png",
-        "transparent.png",
-        "gorilla.jpg",
-        "press_any_key.png",
-        "burger.jpg",
-        "capuchin.png"
+    TEXTURE_DATA = [
+        ("default.png", 1, 1),
+        ("transparent.png", 1, 1),
+        ("gorilla.jpg", 1, 1),
+        ("press_any_key.png", 1, 1),
+        ("burger.jpg", 1, 1),
+        ("capuchin.png", 2, 1.5),
     ]
 
 class TitleScreen(Scene):
