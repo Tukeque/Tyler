@@ -1,6 +1,5 @@
 from copy import copy
 from typing import final
-from PIL import Image
 import pygame, traceback
 
 class Sprite:
@@ -12,7 +11,7 @@ class Sprite:
         self.texture_index = texture_index
 
     def draw(self, screen: pygame.Surface) -> None:
-        surface = self.tyler.surfaces[self.texture_index]
+        surface = self.tyler.textures[self.texture_index]
         screen.blit(surface, (
             self.x * self.tyler.texture_width,
             self.tyler.height - (self.y + 1) * self.tyler.texture_height
@@ -35,21 +34,17 @@ class Scene:
         pass
 
 class Tyler:
-    WHITE = (255, 255, 255)
-    BLACK = (0, 0, 0)
-    RED = (255, 0, 0)
-    GREEN = (0, 255, 0)
-    BLUE = (0, 0, 255)
-
     FPS = 30
     NAME = "Tyler Application"
     OUTSIDE = None
     DEFAULT_TEXTURE_NAME = "default.png"
     OUTSIDE_TEXTURE_NAME = "default.png"
+    TRANSPARENT_TEXTURE_NAME = "transparent.png"
     DEFAULT_SCENE_NAME = "main"
 
     TEXTURE_NAMES = [
-        "default.png"
+        "default.png",
+        "transparent.png"
     ]
 
     @final
@@ -61,22 +56,35 @@ class Tyler:
         return y * self.tile_h + x
 
     @final
-    def get_tile(self, x: int, y: int) -> Sprite:
+    def get_tile(self, tiles: list[Sprite], x: int, y: int) -> Sprite:
         try:
             if x < 0 or x >= self.tile_w or y < 0 or y >= self.tile_w:
                 raise IndexError
 
-            return self.tiles[self.xy_to_int(x, y)]
+            return tiles[self.xy_to_int(x, y)]
         except IndexError:
             return self.OUTSIDE
 
     @final
-    def set_tile(self, x: int, y: int, sprite: Sprite) -> None:
-        self.tiles[self.xy_to_int(x, y)] = sprite
+    def set_tile(self, tiles: list[Sprite], x: int, y: int, sprite: Sprite) -> None:
+        tiles[self.xy_to_int(x, y)] = sprite
 
     @final
-    def gen_tiles(self, texture_index: int) -> None:
-        self.tiles = [Sprite(texture_index, self.int_to_xy(x)[0], self.int_to_xy(x)[1], -1, self) for x in range(self.tile_w * self.tile_h)]
+    def gen_tiles(self, tiles: list[Sprite], texture_index: int) -> None:
+        for i in range(self.length):
+            tiles[i] = Sprite(texture_index, self.int_to_xy(i)[0], self.int_to_xy(i)[1], -1, self)
+
+    @final
+    def get_sort_value(self, sprite: Sprite) -> int:
+        return sprite.z
+
+    @final
+    def regenerate(self, draw_tiles, tiles, old_tiles) -> None:
+        if tiles != old_tiles: # regenerate
+            for i in range(len(tiles)):
+                draw_tiles[i] = copy(tiles[i])
+
+            draw_tiles.sort(key=self.get_sort_value)
 
     @final
     def texture(self, texture_name: str) -> int:
@@ -97,19 +105,25 @@ class Tyler:
         self.height = height
         self.tile_w = tile_w
         self.tile_h = tile_h
+        self.length = tile_w * tile_h
 
         self.texture_width = width // tile_w
         self.texture_height = height // tile_h
         self.do_run = True
         self.fps_check = 5
 
-        self.tiles_draw = []
         self.sprites: dict[str, Sprite] = {}
-        self.textures = [Image.open(name).resize((self.texture_width, self.texture_height)) for name in self.TEXTURE_NAMES]
-        self.surfaces = [pygame.image.fromstring(texture.tobytes(), texture.size, texture.mode).convert() for texture in self.textures]
-        self.old_tiles = [] # don't touch
+        self.textures = [pygame.transform.scale(pygame.image.load(name), (self.texture_width, self.texture_height)) for name in self.TEXTURE_NAMES]
 
-        self.gen_tiles(self.texture(self.DEFAULT_TEXTURE_NAME))
+        self.background: list[Sprite] = [None for _ in range(self.length)]
+        self.foreground: list[Sprite] = [None for _ in range(self.length)]
+        self.draw_background: list[Sprite] = [None for _ in range(self.length)]
+        self.draw_foreground: list[Sprite] = [None for _ in range(self.length)]
+        self.old_background: list[Sprite] = [] # don't touch
+        self.old_foreground: list[Sprite] = [] # don't touch
+        
+        self.gen_tiles(self.background, self.texture(self.DEFAULT_TEXTURE_NAME))
+        self.gen_tiles(self.foreground, self.texture(self.TRANSPARENT_TEXTURE_NAME))
         self.OUTSIDE = Sprite(self.texture(self.OUTSIDE_TEXTURE_NAME), -1, -1, -9999, self)
 
         pygame.display.set_caption(self.NAME)
@@ -134,27 +148,25 @@ class Tyler:
 
             self.scene.event(event)
 
-        self.screen.fill(self.BLACK)
+        self.screen.fill((0x00, 0x00, 0x00))
         self.scene.loop(delta)
 
-        def get_sort_value(sprite: Sprite) -> int:
-                return sprite.z
+        # background & foreground order
+        self.regenerate(self.draw_background, self.background, self.old_background)
+        self.regenerate(self.draw_foreground, self.foreground, self.old_foreground)
 
-        # draw sprites
-        if self.tiles != self.old_tiles: # regenerate
-            self.tiles_draw = self.tiles
+        self.old_background = [copy(x) for x in self.background]
+        self.old_foreground = [copy(x) for x in self.foreground]
 
-            # sort
-            self.tiles_draw.sort(key=get_sort_value)
-
+        # sprite order
         sorted_sprites: list[Sprite] = []
         for key in self.sprites: sorted_sprites.append(copy(self.sprites[key]))
-        sorted_sprites.sort(key=get_sort_value)
+        sorted_sprites.sort(key=self.get_sort_value)
 
-        for sprite in self.tiles_draw: sprite.draw(self.screen)
+        # draw everything
+        for sprite in self.draw_background: sprite.draw(self.screen)
+        for sprite in self.draw_foreground: sprite.draw(self.screen)
         for sprite in sorted_sprites: sprite.draw(self.screen)
-
-        self.old_tiles = [copy(x) for x in self.tiles]
 
         self.scene.draw()
         pygame.display.flip()
