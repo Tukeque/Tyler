@@ -17,7 +17,11 @@ class TitleScreen(Scene):
     tyler: Tyler # only for vs to help with autocompletion
 
     def start(self) -> None:
-        self.tyler.get_tile(self.tyler.background, 1, 1).texture_index = self.tyler.texture("press_any_key.png")
+        self.tyler.fill(self.tyler.backgrounds[0], self.tyler.texture("default.png"))
+        self.tyler.get_tile(self.tyler.backgrounds[0], 1, 1).texture_index = self.tyler.texture("press_any_key.png")
+
+    def draw(self) -> None:
+        self.tyler.draw(0, 0, 0)
 
     def event(self, event) -> None:
         match event.type:
@@ -28,10 +32,13 @@ class Main(Scene):
     tyler: Tyler
 
     def start(self) -> None:
-        self.tyler.gen_tiles(self.tyler.background, self.tyler.texture("burger.jpg"))
+        self.tyler.fill(self.tyler.backgrounds[0], self.tyler.texture("burger.jpg"))
 
         self.tyler.sprites["gorilla"] = Sprite(self.tyler.texture("gorilla.jpg"), 1, 1, 10, self.tyler)
         self.tyler.sprites["capuchin"] = Sprite(self.tyler.texture("capuchin.png"), 1, 3, 10, self.tyler)
+
+    def draw(self) -> None:
+        self.tyler.draw(0, 0, 0)
 
     def loop(self, delta) -> None:
         self.tyler.sprites["gorilla"].x += 1 * delta
