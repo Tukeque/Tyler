@@ -180,7 +180,7 @@ class Tyler:
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                self.do_run = False
+                self.RUN = False
 
             self.scene.event(event)
 
