@@ -92,7 +92,7 @@ class Tyler:
         return sprite.z
 
     @final
-    def regenerate(self, draw_tiles, tiles, old_tiles) -> None:
+    def regenerate(self, draw_tiles: list[Sprite], tiles: list[Sprite], old_tiles: list[Sprite]) -> None:
         if tiles != old_tiles: # regenerate
             for i in range(len(tiles)):
                 draw_tiles[i] = copy(tiles[i])
