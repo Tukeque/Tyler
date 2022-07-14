@@ -40,13 +40,14 @@ class Tyler:
 
     DEFAULT_TEXTURE_NAME = "default.png"
     TRANSPARENT_TEXTURE_NAME = "transparent.png"
+    HIJACKER_TEXTURE_NAME = "transparent.png"
     DEFAULT_SCENE_NAME = "main"
     CLEAR_COLOR = (0, 0, 0)
 
     # Warning!: Messing with these values incorrectly may lead to a broken engine
     DO_BACKGROUNDS = True
     DO_FOREGROUND = True
-    DO_HIJACKER = True
+    DO_HIJACKER = False
     DO_TEXTURES = True
     DO_SPRITES = True
     DO_CLEAR = True
@@ -146,6 +147,8 @@ class Tyler:
             self.backgrounds: list[list[Sprite]] = [
                 [None for _ in range(self.length)] for _ in range(4)
             ]
+        if self.DO_HIJACKER:
+            self.hijacker = Sprite(self.texture(self.HIJACKER_TEXTURE_NAME), -9999, -9999, -9999, self)
 
         if self.DO_FOREGROUND:
             self.foreground: list[Sprite] = [None for _ in range(self.length)]
@@ -198,7 +201,7 @@ class Tyler:
         if self.DO_FOREGROUND:
             self.draw_z(0, 0, self.foreground, self.old_foreground, self.draw_foreground) # foreground
         if self.DO_HIJACKER:
-            pass # missing hijacker
+            self.hijacker.draw(self.screen)
 
         pygame.display.flip()
 
