@@ -3,19 +3,50 @@ from typing import final
 import pygame, traceback
 
 class Sprite:
-    def __init__(self, texture_index: int, x: int, y: int, z: int, tyler):
+    DO_ROTATION = False
+
+    def __init__(self, texture_index: int, x: float, y: float, z: float, tyler, r: float = 0, rx: float = 0, ry: float = 0):
         self.x, self.y = x, y
-        self.z = z
+        self.z, self.r = z, r
+        self.rx, self.ry = rx, ry
 
         self.tyler = tyler
         self.texture_index = texture_index
 
+    @final
+    def blit_rotate(self, screen: pygame.Surface, image: pygame.Surface, pos: tuple[float, float], origin_pos: tuple[float, float], angle: float): # Made by Rabbid76 on StackOverflow
+        # offset from pivot to center
+        image_rect = image.get_rect(topleft = (pos[0] - origin_pos[0], pos[1] - origin_pos[1]))
+        offset_center_to_pivot: pygame.Vector2 = pygame.math.Vector2(pos) - image_rect.center
+
+        # roatated offset from pivot to center
+        rotated_offset = offset_center_to_pivot.rotate(-angle)
+
+        # roatetd image center
+        rotated_image_center = (pos[0] - rotated_offset.x, pos[1] - rotated_offset.y)
+
+        # get a rotated image
+        rotated_image = pygame.transform.rotozoom(image, angle, 1)
+        rotated_image_rect = rotated_image.get_rect(center = rotated_image_center)
+
+        # rotate and blit the image
+        screen.blit(rotated_image, rotated_image_rect)
+
     def draw(self, screen: pygame.Surface, ox: float = 0, oy: float = 0) -> None:
-        surface = self.tyler.textures[self.texture_index]
-        screen.blit(surface, (
-            (self.x + ox) * self.tyler.texture_width,
-            self.tyler.height - (self.y + 1 + oy) * self.tyler.texture_height
-        ))
+        if not self.DO_ROTATION:
+            screen.blit(self.tyler.textures[self.texture_index], (
+                (self.x + ox) * self.tyler.texture_width,
+                self.tyler.height - (self.y + 1 + oy) * self.tyler.texture_height
+            ))
+
+        else: # do rotation
+            self.blit_rotate(screen, self.tyler.textures[self.texture_index], (
+                (self.x + ox + 0.5) * self.tyler.texture_width,
+                self.tyler.height - (self.y + 1 + oy - 0.5) * self.tyler.texture_height
+            ), (
+                (self.rx + 0.5) * self.tyler.texture_width,
+                (self.ry + 0.5) * self.tyler.texture_height
+            ), self.r)
 
 class Scene:
     def loop(self, delta) -> None:
