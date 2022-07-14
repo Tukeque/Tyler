@@ -39,6 +39,7 @@ class Tyler:
     DEFAULT_TEXTURE_NAME = "default.png"
     TRANSPARENT_TEXTURE_NAME = "transparent.png"
     DEFAULT_SCENE_NAME = "main"
+    RUN = True
 
     TEXTURE_DATA = [
         ("default.png", 1, 1),
@@ -184,9 +185,9 @@ class Tyler:
     @final
     def run(self) -> None:
         try:
-            while self.do_run:
+            while self.RUN:
                 self.update()
-        except Exception as e:
+        except Exception:
             print(traceback.format_exc())
         
         self.scene.quit()
