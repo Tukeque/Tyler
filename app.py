@@ -36,10 +36,21 @@ class Scene:
 class Tyler:
     FPS = 30
     NAME = "Tyler Application"
+    RUN = True
+
     DEFAULT_TEXTURE_NAME = "default.png"
     TRANSPARENT_TEXTURE_NAME = "transparent.png"
     DEFAULT_SCENE_NAME = "main"
-    RUN = True
+    CLEAR_COLOR = (0, 0, 0)
+
+    # Warning!: Messing with these values incorrectly may lead to a broken engine
+    DO_BACKGROUNDS = True
+    DO_FOREGROUND = True
+    DO_HIJACKER = True
+    DO_TEXTURES = True
+    DO_SPRITES = True
+    DO_CLEAR = True
+    DO_FPS = True
 
     TEXTURE_DATA = [
         ("default.png", 1, 1),
@@ -125,20 +136,23 @@ class Tyler:
 
         self.texture_width = width // tile_w
         self.texture_height = height // tile_h
-        self.do_run = True
         self.fps_check = 5
 
-        self.sprites: dict[str, Sprite] = {}
-        self.textures = [pygame.transform.scale(pygame.image.load(texture[0]), (self.texture_width * texture[1], self.texture_height * texture[2])) for texture in self.TEXTURE_DATA]
-        self.backgrounds: list[list[Sprite]] = [
-            [None for _ in range(self.length)] for _ in range(4)
-        ]
+        if self.DO_SPRITES:
+            self.sprites: dict[str, Sprite] = {}
+        if self.DO_TEXTURES:
+            self.textures = [pygame.transform.scale(pygame.image.load(texture[0]), (self.texture_width * texture[1], self.texture_height * texture[2])) for texture in self.TEXTURE_DATA]
+        if self.DO_BACKGROUNDS:
+            self.backgrounds: list[list[Sprite]] = [
+                [None for _ in range(self.length)] for _ in range(4)
+            ]
 
-        self.foreground: list[Sprite] = [None for _ in range(self.length)]
-        self.draw_foreground: list[Sprite] = [None for _ in range(self.length)]
-        self.old_foreground: list[Sprite] = [None for _ in range(self.length)] # don't touch
+        if self.DO_FOREGROUND:
+            self.foreground: list[Sprite] = [None for _ in range(self.length)]
+            self.draw_foreground: list[Sprite] = [None for _ in range(self.length)]
+            self.old_foreground: list[Sprite] = [None for _ in range(self.length)] # don't touch
         
-        self.fill(self.foreground, self.texture(self.TRANSPARENT_TEXTURE_NAME))
+            self.fill(self.foreground, self.texture(self.TRANSPARENT_TEXTURE_NAME))
 
         pygame.display.set_caption(self.NAME)
         self.clock = pygame.time.Clock() # For syncing the FPS
@@ -150,15 +164,16 @@ class Tyler:
 
     @final
     def update(self) -> None:
-        if self.FPS != 0:
-            delta = self.clock.tick(self.FPS) / 1000 # will make the loop run at the same speed all the time
-        else:
-            delta = self.clock.tick() / 1000 # no FPS limit
+        if self.DO_FPS:
+            if self.FPS != 0:
+                delta = self.clock.tick(self.FPS) / 1000 # will make the loop run at the same speed all the time
+            else:
+                delta = self.clock.tick() / 1000 # no FPS limit
 
-        self.fps_check += 1 * delta
-        if self.fps_check >= 2:
-            print(f"FPS: {round(1/delta, 1)}")
-            self.fps_check = 0
+            self.fps_check += 1 * delta
+            if self.fps_check >= 2:
+                print(f"FPS: {round(1/delta, 1)}")
+                self.fps_check = 0
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -166,19 +181,24 @@ class Tyler:
 
             self.scene.event(event)
 
-        self.screen.fill((0x00, 0x00, 0x00))
+        if self.DO_CLEAR:
+            self.screen.fill(self.CLEAR_COLOR)
         self.scene.loop(delta)
 
         # sprite order
-        sorted_sprites: list[Sprite] = []
-        for key in self.sprites: sorted_sprites.append(copy(self.sprites[key]))
-        sorted_sprites.sort(key=self.get_sort_value)
+        if self.DO_SPRITES:
+            sorted_sprites: list[Sprite] = []
+            for key in self.sprites: sorted_sprites.append(copy(self.sprites[key]))
+            sorted_sprites.sort(key=self.get_sort_value)
 
         # draw
         self.scene.draw() # background
-        for sprite in sorted_sprites: sprite.draw(self.screen) # sprites
-        self.draw_z(0, 0, self.foreground, self.old_foreground, self.draw_foreground) # foreground
-        # missing hijacker
+        if self.DO_SPRITES:
+            for sprite in sorted_sprites: sprite.draw(self.screen) # sprites
+        if self.DO_FOREGROUND:
+            self.draw_z(0, 0, self.foreground, self.old_foreground, self.draw_foreground) # foreground
+        if self.DO_HIJACKER:
+            pass # missing hijacker
 
         pygame.display.flip()
 
