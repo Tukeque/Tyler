@@ -10,11 +10,11 @@ class Sprite:
         self.tyler = tyler
         self.texture_index = texture_index
 
-    def draw(self, screen: pygame.Surface) -> None:
+    def draw(self, screen: pygame.Surface, ox: float = 0, oy: float = 0) -> None:
         surface = self.tyler.textures[self.texture_index]
         screen.blit(surface, (
-            self.x * self.tyler.texture_width,
-            self.tyler.height - (self.y + 1) * self.tyler.texture_height
+            (self.x + ox) * self.tyler.texture_width,
+            self.tyler.height - (self.y + 1 + oy) * self.tyler.texture_height
         ))
 
 class Scene:
@@ -65,9 +65,26 @@ class Tyler:
         tiles[self.xy_to_int(x, y)] = sprite
 
     @final
-    def gen_tiles(self, tiles: list[Sprite], texture_index: int) -> None:
+    def fill(self, tiles: list[Sprite], texture_index: int) -> None:
         for i in range(self.length):
             tiles[i] = Sprite(texture_index, self.int_to_xy(i)[0], self.int_to_xy(i)[1], -1, self)
+
+    @final
+    def draw(self, x: float, y: float, background_index: int) -> None:
+        background = self.backgrounds[background_index]
+
+        for sprite in background:
+            sprite.draw(self.screen, x, y)
+
+    @final
+    def draw_z(self, x: float, y: float, tiles: list[Sprite], old_tiles: list[Sprite], draw_tiles: list[Sprite]) -> None:
+        self.regenerate(draw_tiles, tiles, old_tiles)
+
+        for sprite in draw_tiles:
+            sprite.draw(self.screen, x, y)
+
+        for i in range(len(tiles)):
+            old_tiles[i] = copy(tiles[i])
 
     @final
     def get_sort_value(self, sprite: Sprite) -> int:
@@ -112,16 +129,15 @@ class Tyler:
 
         self.sprites: dict[str, Sprite] = {}
         self.textures = [pygame.transform.scale(pygame.image.load(texture[0]), (self.texture_width * texture[1], self.texture_height * texture[2])) for texture in self.TEXTURE_DATA]
+        self.backgrounds: list[list[Sprite]] = [
+            [None for _ in range(self.length)] for _ in range(4)
+        ]
 
-        self.background: list[Sprite] = [None for _ in range(self.length)]
         self.foreground: list[Sprite] = [None for _ in range(self.length)]
-        self.draw_background: list[Sprite] = [None for _ in range(self.length)]
         self.draw_foreground: list[Sprite] = [None for _ in range(self.length)]
-        self.old_background: list[Sprite] = [] # don't touch
-        self.old_foreground: list[Sprite] = [] # don't touch
+        self.old_foreground: list[Sprite] = [None for _ in range(self.length)] # don't touch
         
-        self.gen_tiles(self.background, self.texture(self.DEFAULT_TEXTURE_NAME))
-        self.gen_tiles(self.foreground, self.texture(self.TRANSPARENT_TEXTURE_NAME))
+        self.fill(self.foreground, self.texture(self.TRANSPARENT_TEXTURE_NAME))
 
         pygame.display.set_caption(self.NAME)
         self.clock = pygame.time.Clock() # For syncing the FPS
@@ -152,24 +168,17 @@ class Tyler:
         self.screen.fill((0x00, 0x00, 0x00))
         self.scene.loop(delta)
 
-        # background & foreground order
-        self.regenerate(self.draw_background, self.background, self.old_background)
-        self.regenerate(self.draw_foreground, self.foreground, self.old_foreground)
-
-        self.old_background = [copy(x) for x in self.background]
-        self.old_foreground = [copy(x) for x in self.foreground]
-
         # sprite order
         sorted_sprites: list[Sprite] = []
         for key in self.sprites: sorted_sprites.append(copy(self.sprites[key]))
         sorted_sprites.sort(key=self.get_sort_value)
 
-        # draw everything
-        for sprite in self.draw_background: sprite.draw(self.screen)
-        for sprite in self.draw_foreground: sprite.draw(self.screen)
-        for sprite in sorted_sprites: sprite.draw(self.screen)
+        # draw
+        self.scene.draw() # background
+        for sprite in sorted_sprites: sprite.draw(self.screen) # sprites
+        self.draw_z(0, 0, self.foreground, self.old_foreground, self.draw_foreground) # foreground
+        # missing hijacker
 
-        self.scene.draw()
         pygame.display.flip()
 
     @final
