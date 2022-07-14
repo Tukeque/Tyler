@@ -36,9 +36,7 @@ class Scene:
 class Tyler:
     FPS = 30
     NAME = "Tyler Application"
-    OUTSIDE = None
     DEFAULT_TEXTURE_NAME = "default.png"
-    OUTSIDE_TEXTURE_NAME = "default.png"
     TRANSPARENT_TEXTURE_NAME = "transparent.png"
     DEFAULT_SCENE_NAME = "main"
 
@@ -57,13 +55,10 @@ class Tyler:
 
     @final
     def get_tile(self, tiles: list[Sprite], x: int, y: int) -> Sprite:
-        try:
-            if x < 0 or x >= self.tile_w or y < 0 or y >= self.tile_w:
-                raise IndexError
+        if x < 0 or x >= self.tile_w or y < 0 or y >= self.tile_w:
+            raise IndexError
 
-            return tiles[self.xy_to_int(x, y)]
-        except IndexError:
-            return self.OUTSIDE
+        return tiles[self.xy_to_int(x, y)]
 
     @final
     def set_tile(self, tiles: list[Sprite], x: int, y: int, sprite: Sprite) -> None:
@@ -127,7 +122,6 @@ class Tyler:
         
         self.gen_tiles(self.background, self.texture(self.DEFAULT_TEXTURE_NAME))
         self.gen_tiles(self.foreground, self.texture(self.TRANSPARENT_TEXTURE_NAME))
-        self.OUTSIDE = Sprite(self.texture(self.OUTSIDE_TEXTURE_NAME), -1, -1, -9999, self)
 
         pygame.display.set_caption(self.NAME)
         self.clock = pygame.time.Clock() # For syncing the FPS
