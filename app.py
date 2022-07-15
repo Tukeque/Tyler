@@ -201,6 +201,15 @@ class Tyler:
                 self.generate_textures()
 
     @final
+    def resize(self, width: int, height: int) -> None:
+        if self.DO_RESIZE:
+            self.pygame_screen(width, height, pygame.RESIZABLE)
+        else:
+            self.pygame_screen(width, height)
+
+        self.generate_textures()
+
+    @final
     def generate_textures(self) -> None:
         if self.DO_TEXTURES:
             self.textures = [
@@ -222,15 +231,11 @@ class Tyler:
         self.ox = 0
         self.oy = 0
         self.scale = 1
-        if self.DO_RESIZE:
-            self.pygame_screen(width, height, pygame.RESIZABLE)
-        else:
-            self.pygame_screen(width, height)
         self.fps_check = 5
 
         if self.DO_SPRITES:
             self.sprites: dict[str, Sprite] = {}
-        self.generate_textures()    
+        self.resize(width, height)   
         if self.DO_BACKGROUNDS:
             self.backgrounds: list[list[Sprite]] = [
                 [None for _ in range(self.length)] for _ in range(4)
