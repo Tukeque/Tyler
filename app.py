@@ -90,16 +90,16 @@ class Tyler:
     ]
 
     @final
-    def int_to_xy(self, x: int) -> tuple[int, int]:
-        return (x % self.tile_h, x // self.tile_h)
+    def int_to_xy(self, i: int) -> tuple[int, int]:
+        return (i % self.tile_w, i // self.tile_w)
 
     @final
     def xy_to_int(self, x: int, y: int) -> int:
-        return y * self.tile_h + x
+        return y * self.tile_w + x
 
     @final
     def get_tile(self, tiles: list[Sprite], x: int, y: int) -> Sprite:
-        if x < 0 or x >= self.tile_w or y < 0 or y >= self.tile_w:
+        if x < 0 or x >= self.tile_w or y < 0 or y >= self.tile_h:
             raise IndexError
 
         return tiles[self.xy_to_int(x, y)]
