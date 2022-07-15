@@ -1,6 +1,7 @@
 from copy import copy
 from typing import final
 import pygame, traceback
+from math import floor
 
 class Sprite:
     DO_ROTATION = False
@@ -34,7 +35,7 @@ class Sprite:
 
     def draw(self, screen: pygame.Surface, ox: float = 0, oy: float = 0) -> None:
         """
-        If overwrite, remember to multiply by texture_width and texture_height and also to add ox and oy
+        If overwrite, remember to multiply by texture_width and texture_height and also to add both ox and oy (display offset and drawing offset)
         Also remember to convert pygame coordinates to math coordinates
         """
 
@@ -175,8 +176,8 @@ class Tyler:
         else: # width >= height
             self.scale = 1 / ((self.base_h / height) * self.tile_h)
 
-        self.texture_width = self.base_w * self.scale
-        self.texture_height = self.base_h * self.scale
+        self.texture_width = floor(self.base_w * self.scale)
+        self.texture_height = floor(self.base_h * self.scale)
 
         self.ox = (width - self.tile_w * self.texture_width) / 2
         self.oy = (height - self.tile_h * self.texture_height) / 2
@@ -234,7 +235,6 @@ class Tyler:
             ]
         if self.DO_HIJACKER:
             self.hijacker = Sprite(self.texture(self.HIJACKER_TEXTURE_NAME), -9999, -9999, -9999, self)
-
         if self.DO_FOREGROUND:
             self.foreground: list[Sprite] = [None for _ in range(self.length)]
             self.draw_foreground: list[Sprite] = [None for _ in range(self.length)]
