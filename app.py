@@ -1,18 +1,21 @@
-from copy import copy
+from traceback import format_exc
 from typing import final
-import pygame, traceback
 from math import floor
+from copy import copy
+import pygame
 
 class Sprite:
     DO_ROTATION = False
 
-    def __init__(self, texture_index: int, x: float, y: float, z: float, tyler, r: float = 0, rx: float = 0, ry: float = 0):
+    def __init__(self, texture_index: int, x: float, y: float, z: float, tyler, r: float = 0, rx: float = 0, ry: float = 0, rotate: bool = False):
         self.x, self.y = x, y
         self.z, self.r = z, r
         self.rx, self.ry = rx, ry
 
         self.tyler = tyler
         self.texture_index = texture_index
+
+        self.DO_ROTATION = rotate
 
     @final
     def blit_rotate(self, screen: pygame.Surface, image: pygame.Surface, pos: tuple[float, float], origin_pos: tuple[float, float], angle: float): # Made by Rabbid76 on StackOverflow
@@ -121,14 +124,17 @@ class Tyler:
             tiles[i] = Sprite(texture_index, self.int_to_xy(i)[0], self.int_to_xy(i)[1], -1, self)
 
     @final
-    def draw(self, x: float, y: float, background_index: int) -> None:
-        background = self.backgrounds[background_index]
-
-        for sprite in background:
-            sprite.draw(self.screen, x, y)
+    def draw(self, x: float, y: float, tiles: list[Sprite], w: int = 0, h: int = 0) -> None:
+        if w == h == 0:
+            for sprite in tiles:
+                sprite.draw(self.screen, x, y)
+        else: # custom size
+            for i in range(w):
+                for j in range(h):
+                    tiles[self.xy_to_int(i, j)].draw(self.screen, x, y)
 
     @final
-    def draw_z(self, x: float, y: float, tiles: list[Sprite], old_tiles: list[Sprite], draw_tiles: list[Sprite]) -> None:
+    def draw_z(self, x: float, y: float, tiles: list[Sprite], old_tiles: list[Sprite], draw_tiles: list[Sprite]) -> None: # todo w, h
         self.regenerate(draw_tiles, tiles, old_tiles)
 
         for sprite in draw_tiles:
@@ -158,8 +164,10 @@ class Tyler:
 
     @final
     def load_scene(self, name: str) -> None:
-        self.scene = self.scenes[name]
+        if self.scene != None:
+            self.scene.quit()
 
+        self.scene = self.scenes[name]
         self.scene.start()
 
     @final
@@ -250,6 +258,7 @@ class Tyler:
             self.fill(self.foreground, self.texture(self.TRANSPARENT_TEXTURE_NAME))
 
         self.scenes = scenes
+        self.scene = None
         for scene_name in self.scenes:
             self.scenes[scene_name].tyler = self
         self.load_scene(self.DEFAULT_SCENE_NAME)
@@ -306,7 +315,7 @@ class Tyler:
             while self.RUN:
                 self.update()
         except Exception:
-            print(traceback.format_exc())
+            print(format_exc())
         
         self.scene.quit()
         pygame.quit()
