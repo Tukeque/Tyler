@@ -29,6 +29,8 @@ class TitleScreen(Scene):
         match event.type:
             case pygame.KEYDOWN:
                 self.tyler.load_scene("main")
+                if event.key == pygame.K_f:
+                    self.tyler.toggle_fullscreen()
 
 class Main(Scene):
     tyler: Tyler
@@ -45,13 +47,19 @@ class Main(Scene):
         self.tyler.sprites["gorilla"].DO_ROTATION = True
 
     def draw(self) -> None:
-        self.tyler.draw(0, 0, 0)
+        self.tyler.draw(0, 0, 0) # todo fix
 
     def loop(self, delta) -> None:
         self.tyler.sprites["capuchin"].x += .5 * delta
         self.tyler.sprites["gorilla"].r += 90 * delta
 
-dummy: Dummy = Dummy(800, 800, 8, 8, {
+    def event(self, event) -> None:
+        match event.type:
+            case pygame.KEYDOWN:
+                if event.key == pygame.K_f:
+                    self.tyler.toggle_fullscreen()
+
+dummy: Dummy = Dummy(800, 800, 16, 10, {
     "title_screen": TitleScreen(),
     "main": Main()
 })
