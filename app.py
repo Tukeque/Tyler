@@ -35,20 +35,19 @@ class Sprite:
 
     def draw(self, screen: pygame.Surface, ox: float = 0, oy: float = 0) -> None:
         """
-        If overwrite, remember to multiply by texture_width and texture_height and also to add both ox and oy (display offset and drawing offset)
-        Also remember to convert pygame coordinates to math coordinates
+        If overwrite, remember to multiply by texture_width and texture_height, to add ox and oy and to convert from python coordinates
         """
 
         if not self.DO_ROTATION:
             screen.blit(self.tyler.textures[self.texture_index], (
-                (self.x + ox) * self.tyler.texture_width + self.tyler.ox,
-                self.tyler.height - (self.y + 1 + oy) * self.tyler.texture_height - self.tyler.oy
+                (self.x + ox) * self.tyler.texture_width,
+                self.tyler.height - (self.y + 1 + oy) * self.tyler.texture_height
             ))
 
         else: # do rotation
             self.blit_rotate(screen, self.tyler.textures[self.texture_index], (
-                (self.x + ox + 0.5) * self.tyler.texture_width + self.tyler.ox,
-                self.tyler.height - (self.y + 1 + oy - 0.5) * self.tyler.texture_height - self.tyler.oy
+                (self.x + ox + 0.5) * self.tyler.texture_width,
+                self.tyler.height - (self.y + 1 + oy - 0.5) * self.tyler.texture_height
             ), (
                 (self.rx + 0.5) * self.tyler.texture_width,
                 (self.ry + 0.5) * self.tyler.texture_height
@@ -165,7 +164,8 @@ class Tyler:
 
     @final
     def pygame_screen(self, width: int, height: int, flags: int = 0) -> None:
-        self.screen = pygame.display.set_mode((width, height), flags)
+        self.py_screen = pygame.display.set_mode((width, height), flags)
+        self.py_screen.fill(self.CLEAR_COLOR)
 
         self.width = width
         self.height = height
@@ -181,6 +181,8 @@ class Tyler:
 
         self.ox = (width - self.tile_w * self.texture_width) / 2
         self.oy = (height - self.tile_h * self.texture_height) / 2
+
+        self.screen = pygame.Surface((self.texture_width * self.tile_w, self.texture_height * self.tile_h))
 
     @final
     def toggle_fullscreen(self) -> None:
@@ -217,8 +219,8 @@ class Tyler:
         self.tile_h = tile_h
         self.base_w = width // tile_w
         self.base_h = height // tile_h
-        self.off_x = 0
-        self.off_y = 0
+        self.ox = 0
+        self.oy = 0
         self.scale = 1
         if self.DO_RESIZE:
             self.pygame_screen(width, height, pygame.RESIZABLE)
@@ -288,6 +290,8 @@ class Tyler:
             self.draw_z(0, 0, self.foreground, self.old_foreground, self.draw_foreground) # foreground
         if self.DO_HIJACKER:
             self.hijacker.draw(self.screen)
+
+        self.py_screen.blit(self.screen, (self.ox, self.oy))
 
         pygame.display.flip()
 
