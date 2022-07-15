@@ -33,16 +33,21 @@ class Sprite:
         screen.blit(rotated_image, rotated_image_rect)
 
     def draw(self, screen: pygame.Surface, ox: float = 0, oy: float = 0) -> None:
+        """
+        If overwrite, remember to multiply by texture_width and texture_height and also to add ox and oy
+        Also remember to convert pygame coordinates to math coordinates
+        """
+
         if not self.DO_ROTATION:
             screen.blit(self.tyler.textures[self.texture_index], (
-                (self.x + ox) * self.tyler.texture_width,
-                self.tyler.height - (self.y + 1 + oy) * self.tyler.texture_height
+                (self.x + ox) * self.tyler.texture_width + self.tyler.ox,
+                self.tyler.height - (self.y + 1 + oy) * self.tyler.texture_height - self.tyler.oy
             ))
 
         else: # do rotation
             self.blit_rotate(screen, self.tyler.textures[self.texture_index], (
-                (self.x + ox + 0.5) * self.tyler.texture_width,
-                self.tyler.height - (self.y + 1 + oy - 0.5) * self.tyler.texture_height
+                (self.x + ox + 0.5) * self.tyler.texture_width + self.tyler.ox,
+                self.tyler.height - (self.y + 1 + oy - 0.5) * self.tyler.texture_height - self.tyler.oy
             ), (
                 (self.rx + 0.5) * self.tyler.texture_width,
                 (self.ry + 0.5) * self.tyler.texture_height
@@ -69,11 +74,12 @@ class Tyler:
     NAME = "Tyler Application"
     RUN = True
 
-    DEFAULT_TEXTURE_NAME = "default.png"
     TRANSPARENT_TEXTURE_NAME = "transparent.png"
     HIJACKER_TEXTURE_NAME = "transparent.png"
+    DEFAULT_TEXTURE_NAME = "default.png"
     DEFAULT_SCENE_NAME = "main"
     CLEAR_COLOR = (0, 0, 0)
+    FULLSCREEN = False
 
     # Warning!: Messing with these values incorrectly may lead to a broken engine
     DO_BACKGROUNDS = True
@@ -81,6 +87,7 @@ class Tyler:
     DO_HIJACKER = False
     DO_TEXTURES = True
     DO_SPRITES = True
+    DO_RESIZE = True
     DO_CLEAR = True
     DO_FPS = True
 
@@ -156,24 +163,71 @@ class Tyler:
         self.scene.start()
 
     @final
-    def __init__(self, width: int, height: int, tile_w: int, tile_h: int, scenes: dict[str, Scene]):
-        pygame.init()
-        self.screen = pygame.display.set_mode((width, height))
+    def pygame_screen(self, width: int, height: int, flags: int = 0) -> None:
+        self.screen = pygame.display.set_mode((width, height), flags)
 
         self.width = width
         self.height = height
+        self.length = self.tile_w * self.tile_h
+
+        if height > width:
+            self.scale = 1 / ((self.base_w / width) * self.tile_w)
+        else: # width >= height
+            self.scale = 1 / ((self.base_h / height) * self.tile_h)
+
+        self.texture_width = self.base_w * self.scale
+        self.texture_height = self.base_h * self.scale
+
+        self.ox = (width - self.tile_w * self.texture_width) / 2
+        self.oy = (height - self.tile_h * self.texture_height) / 2
+
+    @final
+    def toggle_fullscreen(self) -> None:
+        self.set_fullscreen(not self.FULLSCREEN)
+    
+    @final
+    def set_fullscreen(self, x: bool) -> None:
+        self.FULLSCREEN = x
+
+        if self.DO_RESIZE:
+            if self.FULLSCREEN:
+                self.pygame_screen(self.monitor_size[0], self.monitor_size[1], pygame.FULLSCREEN)
+                self.generate_textures()
+            else:
+                self.pygame_screen(self.base_w * self.tile_w, self.base_h * self.tile_h, pygame.RESIZABLE)
+                self.generate_textures()
+
+    @final
+    def generate_textures(self) -> None:
+        if self.DO_TEXTURES:
+            self.textures = [
+                pygame.transform.scale(pygame.image.load(texture[0]), (self.texture_width * texture[1], self.texture_height * texture[2])) for texture in self.TEXTURE_DATA
+            ]
+
+    @final
+    def __init__(self, width: int, height: int, tile_w: int, tile_h: int, scenes: dict[str, Scene]):
+        pygame.init()
+        pygame.display.set_caption(self.NAME)
+        self.clock = pygame.time.Clock() # For syncing the FPS
+        info = pygame.display.Info()
+        self.monitor_size = (info.current_w, info.current_h)
+
         self.tile_w = tile_w
         self.tile_h = tile_h
-        self.length = tile_w * tile_h
-
-        self.texture_width = width // tile_w
-        self.texture_height = height // tile_h
+        self.base_w = width // tile_w
+        self.base_h = height // tile_h
+        self.off_x = 0
+        self.off_y = 0
+        self.scale = 1
+        if self.DO_RESIZE:
+            self.pygame_screen(width, height, pygame.RESIZABLE)
+        else:
+            self.pygame_screen(width, height)
         self.fps_check = 5
 
         if self.DO_SPRITES:
             self.sprites: dict[str, Sprite] = {}
-        if self.DO_TEXTURES:
-            self.textures = [pygame.transform.scale(pygame.image.load(texture[0]), (self.texture_width * texture[1], self.texture_height * texture[2])) for texture in self.TEXTURE_DATA]
+        self.generate_textures()    
         if self.DO_BACKGROUNDS:
             self.backgrounds: list[list[Sprite]] = [
                 [None for _ in range(self.length)] for _ in range(4)
@@ -187,9 +241,6 @@ class Tyler:
             self.old_foreground: list[Sprite] = [None for _ in range(self.length)] # don't touch
         
             self.fill(self.foreground, self.texture(self.TRANSPARENT_TEXTURE_NAME))
-
-        pygame.display.set_caption(self.NAME)
-        self.clock = pygame.time.Clock() # For syncing the FPS
 
         self.scenes = scenes
         for scene_name in self.scenes:
@@ -210,9 +261,13 @@ class Tyler:
                 self.fps_check = 0
 
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self.RUN = False
-
+            match event.type:
+                case pygame.QUIT:
+                    self.RUN = False
+                case pygame.VIDEORESIZE: # can only happen if self.DO_RESIZE is True
+                    if not self.FULLSCREEN:
+                        self.pygame_screen(event.w, event.h, pygame.RESIZABLE)
+                        self.generate_textures()
             self.scene.event(event)
 
         if self.DO_CLEAR:
