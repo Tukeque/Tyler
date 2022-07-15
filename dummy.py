@@ -23,7 +23,7 @@ class TitleScreen(Scene):
         self.tyler.get_tile(self.tyler.backgrounds[0], 1, 1).texture_index = self.tyler.texture("press_any_key.png")
 
     def draw(self) -> None:
-        self.tyler.draw(0, 0, 0)
+        self.tyler.draw(0, 0, self.tyler.backgrounds[0])
 
     def event(self, event) -> None:
         match event.type:
@@ -36,18 +36,18 @@ class Main(Scene):
     tyler: Tyler
 
     def start(self) -> None:
+        self.tyler.resize(800, 800)
         self.tyler.CLEAR_COLOR = (0, 0, 0)
 
         self.tyler.fill(self.tyler.backgrounds[0], self.tyler.texture("burger.jpg"))
         for i in range(self.tyler.tile_w):
             self.tyler.get_tile(self.tyler.foreground, i, self.tyler.tile_h - 1).texture_index = self.tyler.texture("default.png")
 
-        self.tyler.sprites["gorilla"] = Sprite(self.tyler.texture("gorilla.png"), 1, 1, 10, self.tyler, 0, 0, -1)
+        self.tyler.sprites["gorilla"] = Sprite(self.tyler.texture("gorilla.png"), 1, 1, 10, self.tyler, 0, 0, -1, True)
         self.tyler.sprites["capuchin"] = Sprite(self.tyler.texture("capuchin.png"), 1, 3, 10, self.tyler)
-        self.tyler.sprites["gorilla"].DO_ROTATION = True
 
     def draw(self) -> None:
-        self.tyler.draw(0, 0, 0) # todo fix
+        self.tyler.draw(0, 0, self.tyler.backgrounds[0], 5, 5)
 
     def loop(self, delta) -> None:
         self.tyler.sprites["capuchin"].x += .5 * delta
@@ -59,7 +59,7 @@ class Main(Scene):
                 if event.key == pygame.K_f:
                     self.tyler.toggle_fullscreen()
 
-dummy: Dummy = Dummy(800, 800, 16, 10, {
+dummy: Dummy = Dummy(600, 600, 10, 10, {
     "title_screen": TitleScreen(),
     "main": Main()
 })
