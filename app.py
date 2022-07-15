@@ -134,7 +134,7 @@ class Tyler:
                     tiles[self.xy_to_int(i, j)].draw(self.screen, x, y)
 
     @final
-    def draw_z(self, x: float, y: float, tiles: list[Sprite], old_tiles: list[Sprite], draw_tiles: list[Sprite]) -> None: # todo w, h
+    def draw_z(self, x: float, y: float, tiles: list[Sprite], old_tiles: list[Sprite], draw_tiles: list[Sprite]) -> None:
         self.regenerate(draw_tiles, tiles, old_tiles)
 
         for sprite in draw_tiles:
