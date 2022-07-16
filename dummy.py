@@ -1,5 +1,5 @@
 import pygame
-from app import Tyler, Scene, Sprite
+from tyler import Tyler, Scene, Sprite
 
 class Dummy(Tyler):
     NAME = "Dummy"
